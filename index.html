@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hongyu Li · Software Engineer</title>
+  <meta name="description" content="Hongyu Li is a software engineer at Microsoft, previously at Amazon. Projects, background and links.">
+  <meta name="theme-color" content="#09090b">
+  <link rel="canonical" href="https://hongyyu.github.io/">
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="Hongyu Li · Software Engineer">
+  <meta property="og:description" content="Software engineer at Microsoft, previously at Amazon. Projects, background and links.">
+  <meta property="og:url" content="https://hongyyu.github.io/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+  <!-- The animated scene. assets/js/main.js fills it in; assets/js/scenes.js lists the scenes. -->
+  <div id="scene" class="scene" aria-hidden="true"></div>
+
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="page">
+    <div class="banner"></div>
+
+    <div class="window">
+      <div class="console" role="group" aria-label="Background scene">
+        <button type="button" id="btn-scene" title="Next scene">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="key">Scene</span>
+          <span class="value" id="scene-name">Aurora Cabin Snowfall</span>
+          <span class="count" id="scene-count">01/11</span>
+        </button>
+        <span class="gap"></span>
+        <button type="button" id="btn-look" title="Next look">
+          <span class="key">Look</span>
+          <span class="value" id="look-name">ASCII</span>
+        </button>
+        <button type="button" class="icon" id="btn-pause" aria-pressed="false" title="Pause or play">
+          <svg class="i-pause" viewBox="0 0 14 14" aria-hidden="true"><path class="solid" d="M3 2h3v10H3zM8 2h3v10H8z"/></svg>
+          <svg class="i-play" viewBox="0 0 14 14" aria-hidden="true"><path class="solid" d="M3.5 2l8 5-8 5z"/></svg>
+        </button>
+        <button type="button" class="icon" id="btn-view" aria-pressed="false" aria-label="Hide the page and look at the scene" title="Hide or show the page">
+          <svg class="i-hide" viewBox="0 0 14 14" aria-hidden="true"><path d="M1.5 5V1.5H5M9 1.5h3.5V5M12.5 9v3.5H9M5 12.5H1.5V9"/></svg>
+          <svg class="i-show" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 1.5V5H1.5M12.5 5H9V1.5M9 12.5V9h3.5M1.5 9H5v3.5"/></svg>
+        </button>
+      </div>
+
+      <main id="main" class="sheet">
+        <header class="id">
+          <img class="avatar" src="https://github.com/hongyyu.png?size=160" alt="" width="72" height="72">
+          <div class="id-text">
+            <h1>Hongyu Li<span class="cursor" aria-hidden="true"></span></h1>
+            <p class="role">Software Engineer · Microsoft</p>
+          </div>
+          <a class="handle" href="https://github.com/hongyyu">@hongyyu</a>
+        </header>
+
+        <div class="about">
+          <p>Hi, I’m Hongyu, a software engineer at <strong>Microsoft</strong>. Before that I worked at <strong>Amazon</strong>, and I studied at <strong>USC</strong> and <strong>Stony Brook</strong>.</p>
+          <p>My public projects run from data pipelines and warehouses on Spark, Airflow and Redshift to web apps like <a href="https://hongyyu.github.io/3d-interactive-building-model/">Dado</a>, a 3D tool for stacking a medical campus floor by floor.</p>
+
+          <div class="actions">
+            <a class="btn primary" href="https://github.com/hongyyu">GitHub</a>
+            <a class="btn" href="#projects">See projects</a>
+            <!-- More links go here, for example:
+            <a class="btn" href="mailto:you@example.com">Send an email</a>
+            <a class="btn" href="https://www.linkedin.com/in/your-handle">LinkedIn</a>
+            -->
+          </div>
+        </div>
+
+        <section id="projects" aria-labelledby="projects-title">
+          <h2 class="label" id="projects-title">Projects <span class="count">06</span></h2>
+          <ul class="projects">
+            <li>
+              <article class="project">
+                <div class="project-top"><span>01</span><span class="live">Live</span></div>
+                <h3><a href="https://hongyyu.github.io/3d-interactive-building-model/">Dado<span class="arrow" aria-hidden="true">↗</span></a></h3>
+                <p>Interactive 3D massing and stacking diagrams for presenting a medical campus program to clients.</p>
+                <div class="project-foot"><span>JavaScript · Three.js</span><a href="https://github.com/hongyyu/3d-interactive-building-model">Source</a></div>
+              </article>
+            </li>
+            <li>
+              <article class="project">
+                <div class="project-top"><span>02</span><span>Web</span></div>
+                <h3><a href="https://github.com/hongyyu/StockSearchWeb">Stock Search<span class="arrow" aria-hidden="true">↗</span></a></h3>
+                <p>A responsive web app on a Node.js REST API: look up a company and see its price, news and charts.</p>
+                <div class="project-foot"><span>TypeScript · Angular · Node.js</span></div>
+              </article>
+            </li>
+            <li>
+              <article class="project">
+                <div class="project-top"><span>03</span><span>Data</span></div>
+                <h3><a href="https://github.com/hongyyu/California-Immigration-Analysis">California Immigration Analysis<span class="arrow" aria-hidden="true">↗</span></a></h3>
+                <p>An automated pipeline that builds a data warehouse from immigration records, ready for analysis.</p>
+                <div class="project-foot"><span>Python · Jupyter</span></div>
+              </article>
+            </li>
+            <li>
+              <article class="project">
+                <div class="project-top"><span>04</span><span>Data</span></div>
+                <h3><a href="https://github.com/hongyyu/Data-Pipeline">Airflow Data Pipeline<span class="arrow" aria-hidden="true">↗</span></a></h3>
+                <p>A scheduled data pipeline built with Apache Airflow.</p>
+                <div class="project-foot"><span>Python · Airflow</span></div>
+              </article>
+            </li>
+            <li>
+              <article class="project">
+                <div class="project-top"><span>05</span><span>Data</span></div>
+                <h3><a href="https://github.com/hongyyu/Datalake-with-Spark">Data Lake with Spark<span class="arrow" aria-hidden="true">↗</span></a></h3>
+                <p>An ETL pipeline on AWS that loads a data lake with Spark.</p>
+                <div class="project-foot"><span>Python · Spark · AWS</span></div>
+              </article>
+            </li>
+            <li>
+              <article class="project">
+                <div class="project-top"><span>06</span><span>Data</span></div>
+                <h3><a href="https://github.com/hongyyu/Data-Mining">Data Mining<span class="arrow" aria-hidden="true">↗</span></a></h3>
+                <p>Market-basket analysis, recommendation systems, and graph and stream processing.</p>
+                <div class="project-foot"><span>Python</span></div>
+              </article>
+            </li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="path-title">
+          <h2 class="label" id="path-title">Path</h2>
+          <!-- Add titles, degrees or years in the third column of each row. -->
+          <ol class="path">
+            <li><span class="when now">Now</span><span class="where">Microsoft</span><span class="what">Software Engineer</span></li>
+            <li><span class="when">Prev</span><span class="where">Amazon</span><span class="what"></span></li>
+            <li><span class="when">Edu</span><span class="where">University of Southern California</span><span class="what"></span></li>
+            <li><span class="when">Edu</span><span class="where">Stony Brook University</span><span class="what"></span></li>
+          </ol>
+        </section>
+
+        <section aria-labelledby="skills-title">
+          <h2 class="label" id="skills-title">Skills &amp; Technologies</h2>
+          <ul class="chips">
+            <li>Python</li>
+            <li>TypeScript</li>
+            <li>JavaScript</li>
+            <li>Node.js</li>
+            <li>Angular</li>
+            <li>Three.js</li>
+            <li>SQL</li>
+            <li>Apache Spark</li>
+            <li>Apache Airflow</li>
+            <li>AWS</li>
+            <li>Amazon Redshift</li>
+          </ul>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <p>© 2026 Hongyu Li</p>
+        <p><span id="credit-scene">Scene</span> from <a href="https://www.ascii-magic.com/ascii">ASCII Magic</a> · <a href="https://github.com/hongyyu/hongyyu.github.io">Source</a></p>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>
