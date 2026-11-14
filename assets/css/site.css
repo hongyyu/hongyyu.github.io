@@ -265,6 +265,7 @@ html:not(.js) .console {
 
 /* Scene only: the page steps aside and the console docks at the bottom. */
 .scene-only .sheet,
+.scene-only .yard,
 .scene-only .foot,
 .scene-only .banner {
   display: none;
@@ -722,6 +723,136 @@ h1 {
   margin: 0;
 }
 
+/* ── the yard: a pixel cat and a ball of yarn (yard.js) ──────────────── */
+
+.yard {
+  position: relative;
+  height: 112px;
+  overflow: hidden;
+  border-top: 1px dashed var(--line);
+  cursor: pointer;
+  touch-action: pan-y; /* a finger can still scroll the page from here */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html:not(.js) .yard,
+html:not(.js) .pets {
+  display: none;
+}
+
+.yard-hint {
+  position: absolute;
+  top: 9px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  color: var(--mute);
+  font: 10.5px/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.yard.played .yard-hint {
+  opacity: 0;
+}
+
+/* the art is drawn one canvas pixel per pixel and shown three times the size */
+.yard canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* both stand on the ground, the bottom edge, and are moved with transforms */
+.cat,
+.yarn {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+  will-change: transform;
+}
+
+.cat {
+  cursor: default;
+}
+
+.cat.flip canvas {
+  transform: scaleX(-1); /* the side views are drawn facing right */
+}
+
+.yarn {
+  cursor: grab;
+  touch-action: none; /* a finger on the yarn drags it */
+}
+
+.yarn:active {
+  cursor: grabbing;
+}
+
+/* the loose thread behind the yarn */
+.thread {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.thread polyline {
+  fill: none;
+  stroke: #f2766b;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+
+/* hearts and sleepy z's: they rise from (--x, --y) and fade */
+.floater {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  pointer-events: none;
+  animation: float-up 1.3s ease-out forwards;
+}
+
+@keyframes float-up {
+  from {
+    opacity: 1;
+    transform: translate(var(--x), var(--y));
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(calc(var(--x) + var(--drift)), calc(var(--y) - 30px));
+  }
+}
+
+.pets {
+  color: var(--text);
+}
+
+.pets span:first-child {
+  color: #f08fc0;
+}
+
+/* for screen readers only */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ── footer ──────────────────────────────────────────────────────────── */
 
 .foot {
@@ -807,6 +938,11 @@ h1 {
   .cursor,
   .live::before {
     animation: none;
+  }
+
+  .floater {
+    animation: none;
+    transform: translate(var(--x), var(--y));
   }
 
   .chips li {

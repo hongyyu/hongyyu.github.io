@@ -5,12 +5,14 @@
  * renderer.js draws one scene on a canvas that covers the band at the top of the page
  * figures.js  the small animated figures in the project cards
  * sound.js    the interface sounds
+ * yard.js     the cat and the yarn at the foot of the page
  * this file   loads scenes, runs the clock and wires up the buttons
  */
 import { SceneCanvas } from "./renderer.js";
 import { SCENES, LOOKS } from "./scenes.js";
 import { startFigures, setFiguresPaused, scramble } from "./figures.js";
 import { startSound } from "./sound.js";
+import { startYard, setYardPaused } from "./yard.js";
 
 const PIECES = new URL("../../vendor/ascii-magic-art/pieces/", import.meta.url);
 const FADE_MS = 900; // matches the opacity transition on .scene-layer
@@ -136,6 +138,7 @@ $("btn-pause")?.addEventListener("click", () => {
   state.paused = !state.paused;
   sync();
   setFiguresPaused(state.paused);
+  setYardPaused(state.paused);
   if (state.paused) halt();
   else run();
 });
@@ -174,4 +177,5 @@ for (const card of document.querySelectorAll(".project")) {
 sync();
 show();
 startFigures({ startPaused: state.paused });
+startYard({ startPaused: state.paused });
 startSound();

@@ -236,8 +236,17 @@
         </section>
       </main>
 
+      <!-- A pixel cat and a ball of yarn to play with. assets/js/yard.js draws and runs it. -->
+      <div class="yard" id="yard">
+        <p class="yard-hint" aria-hidden="true">click to drop the yarn · drag it to throw · stroke the cat</p>
+        <svg class="thread" aria-hidden="true"><polyline points=""/></svg>
+        <button type="button" class="cat" aria-label="A cat. Press Enter to pet it."><canvas aria-hidden="true"></canvas></button>
+        <button type="button" class="yarn" aria-label="A ball of yarn. Press Enter to toss it."><canvas aria-hidden="true"></canvas></button>
+      </div>
+
       <footer class="foot">
         <p>© 2026 Hongyu Li</p>
+        <p class="pets" title="Times you have petted the cat"><span aria-hidden="true">♥</span> <span id="pet-count">0</span><span class="sr"> pets from you</span></p>
         <p><span id="credit-scene">Scene</span> from <a href="https://www.ascii-magic.com/ascii">ASCII Magic</a> · <a href="https://github.com/hongyyu/hongyyu.github.io">Source</a></p>
       </footer>
     </div>

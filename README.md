@@ -44,6 +44,12 @@ To try a figure out, run this in the browser console on the page:
 
 Sweeping the mouse across the skills ticks each one like a key, and links and buttons click. The sounds are made on the spot with Web Audio in [`assets/js/sound.js`](assets/js/sound.js); there are no sound files. Browsers only allow sound after the first click or key press, so hovering is silent until then. The speaker button in the bar turns sound off, and the choice is remembered.
 
+## The cat
+
+At the foot of the page a pixel cat sleeps beside a ball of yarn. Click the strip to drop the yarn, drag the yarn to throw it, and the cat chases it and bats it back. Move the pointer along the cat to pet it. With the keyboard, Tab to the cat or the yarn and press Enter.
+
+The art is rows of characters, one per pixel, at the top of [`assets/js/yard.js`](assets/js/yard.js); change a row and the drawing changes. The count of pets is kept in the visitor's own browser, since the site has no server to hold a total.
+
 ## Files
 
 | File | What it does |
@@ -52,6 +58,7 @@ Sweeping the mouse across the skills ticks each one like a key, and links and bu
 | [`assets/js/renderer.js`](assets/js/renderer.js) | Draws a scene on a canvas that covers the band, repainting only the characters that change. |
 | [`assets/js/figures.js`](assets/js/figures.js) | The figures in the project cards, and the scramble on a card's name. |
 | [`assets/js/sound.js`](assets/js/sound.js) | The interface sounds and the speaker button. |
+| [`assets/js/yard.js`](assets/js/yard.js) | The cat and the yarn: the pixel art, the physics and what the cat does. |
 | [`assets/js/main.js`](assets/js/main.js) | Loads scenes, runs the clock and wires up the bar. |
 | [`vendor/ascii-magic-art/`](vendor/ascii-magic-art/) | The parts of the library this site uses, copied in so nothing loads from another site. |
 
@@ -60,4 +67,4 @@ Visitors who ask their system for reduced motion get still frames until they pre
 ## Credits
 
 - Scenes and drawing code: [ascii-magic-art](https://github.com/kailashsr38/ascii-magic-art), MIT License.
-- The layout, the project figures and the key sounds take after [glyph](https://github.com/franvy/glyph) by Franvy. No code or assets are copied from it.
+- The layout, the project figures, the key sounds and the cat with its yarn take after [glyph](https://github.com/franvy/glyph) by Franvy. No code or art is copied from it: the cat here is its own drawing.

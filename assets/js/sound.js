@@ -5,6 +5,7 @@
  *   hover a button                      a soft tick
  *   click a link or a button            a tap, or a two-part click for a toggle
  *   the first click or key press        a short "ready", so the reader knows sound is on
+ *   the yard at the foot of the page    the yarn thuds, a swat ticks, a pet chimes (yard.js)
  *
  * Browsers only let a page make sound after the reader has clicked or pressed a key,
  * so hovering is silent until then. The speaker button turns sound off and on, and
@@ -116,12 +117,22 @@ const CUES = {
     note(at, 660, 0.05, 0.16);
     note(at + 0.09, 990, 0.045, 0.22);
   },
+  // the yarn hitting the ground or a wall; `amount` is how hard, 0 to 1
+  bounce(at, amount) {
+    thock(at, { freq: 120 + 40 * amount, gain: 0.12 * amount, decay: 0.06 });
+    click(at, { freq: 900, q: 0.8, gain: 0.05 * amount, decay: 0.02 });
+  },
+  // a pet
+  heart(at) {
+    note(at, 1175, 0.035, 0.14);
+    note(at + 0.06, 1568, 0.03, 0.2);
+  },
 };
 
-/** Play a cue, if sound is on and the browser has let audio start. */
-export function play(cue) {
+/** Play a cue, if sound is on and the browser has let audio start. `amount` scales the cues that take one. */
+export function play(cue, amount = 1) {
   if (!enabled || !ctx || ctx.state !== "running") return;
-  CUES[cue]?.(ctx.currentTime + 0.002);
+  CUES[cue]?.(ctx.currentTime + 0.002, amount);
 }
 
 /** A throttle: true for the first call, then false until gapMs has passed. */
@@ -160,7 +171,7 @@ export function startSound() {
   window.addEventListener("click", (event) => {
     if (!(event.target instanceof Element)) return;
     const el = event.target.closest("a, button");
-    if (!el || el === button) return;
+    if (!el || el === button || el.closest(".yard")) return; // the yard makes its own sounds
     const cue = el.matches("button[aria-pressed]") ? "toggle" : "tap";
     void unlock().then((ok) => ok && play(cue));
   }, { capture: true });
@@ -170,7 +181,7 @@ export function startSound() {
   const greet = (event) => {
     for (const type of gestures) window.removeEventListener(type, greet, { capture: true });
     if (!enabled) return;
-    const onControl = event.target instanceof Element && event.target.closest("a, button");
+    const onControl = event.target instanceof Element && event.target.closest("a, button, .yard");
     void unlock().then((ok) => ok && !onControl && play("ready"));
   };
   for (const type of gestures) window.addEventListener(type, greet, { capture: true });
