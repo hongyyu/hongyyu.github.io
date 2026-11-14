@@ -4,16 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hongyu Li · Software Engineer</title>
-  <meta name="description" content="Hongyu Li is a software engineer at Microsoft, previously at Amazon. Projects, background and links.">
+  <meta name="description" content="Hongyu Li is a software engineer at Microsoft who builds backend and distributed systems. Previously at Walgreens and Amazon.">
   <meta name="theme-color" content="#09090b">
   <link rel="canonical" href="https://hongyyu.github.io/">
   <meta property="og:type" content="profile">
   <meta property="og:title" content="Hongyu Li · Software Engineer">
-  <meta property="og:description" content="Software engineer at Microsoft, previously at Amazon. Projects, background and links.">
+  <meta property="og:description" content="Software engineer at Microsoft, building backend and distributed systems. Previously at Walgreens and Amazon.">
   <meta property="og:url" content="https://hongyyu.github.io/">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/css/site.css">
-  <script>document.documentElement.classList.add("js");</script>
+  <script>
+    document.documentElement.classList.add("js");
+    try { if (localStorage.getItem("sound") === "off") document.documentElement.dataset.sound = "off"; } catch (e) {}
+  </script>
 </head>
 <body>
   <!-- The animated scene. assets/js/main.js fills it in; assets/js/scenes.js lists the scenes. -->
@@ -37,6 +40,10 @@
           <span class="key">Look</span>
           <span class="value" id="look-name">ASCII</span>
         </button>
+        <button type="button" class="icon" id="btn-sound" aria-pressed="true" aria-label="Sound effects" title="Sound effects">
+          <svg class="i-on" viewBox="0 0 14 14" aria-hidden="true"><path class="solid" d="M1.5 5h2.2L7 2.2v9.6L3.7 9H1.5z"/><path d="M9.3 5.2a2.6 2.6 0 0 1 0 3.6M11 3.4a5 5 0 0 1 0 7.2"/></svg>
+          <svg class="i-off" viewBox="0 0 14 14" aria-hidden="true"><path class="solid" d="M1.5 5h2.2L7 2.2v9.6L3.7 9H1.5z"/><path d="M9.6 5.4l3 3.2M12.6 5.4l-3 3.2"/></svg>
+        </button>
         <button type="button" class="icon" id="btn-pause" aria-pressed="false" title="Pause or play">
           <svg class="i-pause" viewBox="0 0 14 14" aria-hidden="true"><path class="solid" d="M3 2h3v10H3zM8 2h3v10H8z"/></svg>
           <svg class="i-play" viewBox="0 0 14 14" aria-hidden="true"><path class="solid" d="M3.5 2l8 5-8 5z"/></svg>
@@ -58,99 +65,174 @@
         </header>
 
         <div class="about">
-          <p>Hi, I’m Hongyu, a software engineer at <strong>Microsoft</strong>. Before that I worked at <strong>Amazon</strong>, and I studied at <strong>USC</strong> and <strong>Stony Brook</strong>.</p>
-          <p>My public projects run from data pipelines and warehouses on Spark, Airflow and Redshift to web apps like <a href="https://hongyyu.github.io/3d-interactive-building-model/">Dado</a>, a 3D tool for stacking a medical campus floor by floor.</p>
+          <p>Hi, I’m Hongyu, a software engineer at <strong>Microsoft</strong>. I build backend and distributed systems. Before this I built pharmacy and contact-center services at <strong>Walgreens</strong>, and worked on the Alexa back end at <strong>Amazon</strong>.</p>
+          <p>I have an M.S. in Analytics from <strong>USC</strong> and a B.S. in Applied Math and Statistics from <strong>Stony Brook</strong>. On the side I built <a href="https://hongyyu.github.io/3d-interactive-building-model/">Dado</a>, a 3D tool for stacking a medical campus floor by floor.</p>
 
           <div class="actions">
             <a class="btn primary" href="https://github.com/hongyyu">GitHub</a>
-            <a class="btn" href="#projects">See projects</a>
-            <!-- More links go here, for example:
+            <a class="btn" href="https://www.linkedin.com/in/hyyyyli/">LinkedIn</a>
+            <!-- An email button, if you want one:
             <a class="btn" href="mailto:you@example.com">Send an email</a>
-            <a class="btn" href="https://www.linkedin.com/in/your-handle">LinkedIn</a>
             -->
           </div>
         </div>
 
+        <!-- Each row starts with the year it began. -->
+        <section id="experience" aria-labelledby="experience-title">
+          <h2 class="label" id="experience-title">Experience</h2>
+          <ol class="path">
+            <li>
+              <span class="when now">Now</span>
+              <div class="entry">
+                <div class="entry-head"><span class="where">Microsoft</span><span class="what">Software Engineer</span></div>
+              </div>
+            </li>
+            <li>
+              <span class="when">2023</span>
+              <div class="entry">
+                <div class="entry-head"><span class="where">Walgreens Boots Alliance</span><span class="what">Software Engineer II</span></div>
+                <p class="place">Redmond, WA</p>
+              </div>
+            </li>
+            <li>
+              <span class="when">2021</span>
+              <div class="entry">
+                <div class="entry-head"><span class="where">Amazon</span><span class="what">Software Development Engineer</span></div>
+                <p class="place">Seattle, WA</p>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <!--
+          Each card has a figure (drawn by assets/js/figures.js, picked by data-figure), a name,
+          a line about it and its tools. A card whose name is a link opens that link; a name
+          in a plain <span> leaves the card closed, for work that has no public page.
+        -->
         <section id="projects" aria-labelledby="projects-title">
-          <h2 class="label" id="projects-title">Projects <span class="count">06</span></h2>
+          <h2 class="label" id="projects-title">Projects <span class="count">03</span></h2>
           <ul class="projects">
             <li>
               <article class="project">
+                <div class="shot"><div class="figure" data-figure="dado" aria-hidden="true"></div></div>
                 <div class="project-top"><span>01</span><span class="live">Live</span></div>
-                <h3><a href="https://hongyyu.github.io/3d-interactive-building-model/">Dado<span class="arrow" aria-hidden="true">↗</span></a></h3>
-                <p>Interactive 3D massing and stacking diagrams for presenting a medical campus program to clients.</p>
+                <h3><a href="https://hongyyu.github.io/3d-interactive-building-model/" aria-label="Dado"><span data-scramble aria-hidden="true">Dado</span><span class="arrow" aria-hidden="true">↗</span></a></h3>
+                <p>Interactive 3D massing and stacking diagrams for presenting a medical campus program.</p>
                 <div class="project-foot"><span>JavaScript · Three.js</span><a href="https://github.com/hongyyu/3d-interactive-building-model">Source</a></div>
               </article>
             </li>
             <li>
               <article class="project">
-                <div class="project-top"><span>02</span><span>Web</span></div>
-                <h3><a href="https://github.com/hongyyu/StockSearchWeb">Stock Search<span class="arrow" aria-hidden="true">↗</span></a></h3>
-                <p>A responsive web app on a Node.js REST API: look up a company and see its price, news and charts.</p>
-                <div class="project-foot"><span>TypeScript · Angular · Node.js</span></div>
+                <div class="shot"><div class="figure" data-figure="pharmacy" aria-hidden="true"></div></div>
+                <div class="project-top"><span>02</span><span>Walgreens</span></div>
+                <h3 aria-label="Pharmacy Clinical Portal"><span data-scramble aria-hidden="true">Pharmacy Clinical Portal</span></h3>
+                <p>A distributed service that connects pharmacy systems across Walgreens.</p>
+                <div class="project-foot"><span>Java · Spring · Azure</span></div>
               </article>
             </li>
             <li>
               <article class="project">
-                <div class="project-top"><span>03</span><span>Data</span></div>
-                <h3><a href="https://github.com/hongyyu/California-Immigration-Analysis">California Immigration Analysis<span class="arrow" aria-hidden="true">↗</span></a></h3>
-                <p>An automated pipeline that builds a data warehouse from immigration records, ready for analysis.</p>
-                <div class="project-foot"><span>Python · Jupyter</span></div>
-              </article>
-            </li>
-            <li>
-              <article class="project">
-                <div class="project-top"><span>04</span><span>Data</span></div>
-                <h3><a href="https://github.com/hongyyu/Data-Pipeline">Airflow Data Pipeline<span class="arrow" aria-hidden="true">↗</span></a></h3>
-                <p>A scheduled data pipeline built with Apache Airflow.</p>
-                <div class="project-foot"><span>Python · Airflow</span></div>
-              </article>
-            </li>
-            <li>
-              <article class="project">
-                <div class="project-top"><span>05</span><span>Data</span></div>
-                <h3><a href="https://github.com/hongyyu/Datalake-with-Spark">Data Lake with Spark<span class="arrow" aria-hidden="true">↗</span></a></h3>
-                <p>An ETL pipeline on AWS that loads a data lake with Spark.</p>
-                <div class="project-foot"><span>Python · Spark · AWS</span></div>
-              </article>
-            </li>
-            <li>
-              <article class="project">
-                <div class="project-top"><span>06</span><span>Data</span></div>
-                <h3><a href="https://github.com/hongyyu/Data-Mining">Data Mining<span class="arrow" aria-hidden="true">↗</span></a></h3>
-                <p>Market-basket analysis, recommendation systems, and graph and stream processing.</p>
-                <div class="project-foot"><span>Python</span></div>
+                <div class="shot"><div class="figure" data-figure="alexa" aria-hidden="true"></div></div>
+                <div class="project-top"><span>03</span><span>Amazon</span></div>
+                <h3 aria-label="Alexa Sessions"><span data-scramble aria-hidden="true">Alexa Sessions</span></h3>
+                <p>Session handling in the Alexa back end, moved to a new session model.</p>
+                <div class="project-foot"><span>Java · Spring · AWS</span></div>
               </article>
             </li>
           </ul>
         </section>
 
-        <section aria-labelledby="path-title">
-          <h2 class="label" id="path-title">Path</h2>
-          <!-- Add titles, degrees or years in the third column of each row. -->
+        <section id="education" aria-labelledby="education-title">
+          <h2 class="label" id="education-title">Education</h2>
           <ol class="path">
-            <li><span class="when now">Now</span><span class="where">Microsoft</span><span class="what">Software Engineer</span></li>
-            <li><span class="when">Prev</span><span class="where">Amazon</span><span class="what"></span></li>
-            <li><span class="when">Edu</span><span class="where">University of Southern California</span><span class="what"></span></li>
-            <li><span class="when">Edu</span><span class="where">Stony Brook University</span><span class="what"></span></li>
+            <li>
+              <span class="when">2019</span>
+              <div class="entry">
+                <div class="entry-head"><span class="where">University of Southern California</span><span class="what">M.S. Analytics</span></div>
+                <p class="place">Los Angeles, CA · 2019 – 2021</p>
+              </div>
+            </li>
+            <li>
+              <span class="when">2014</span>
+              <div class="entry">
+                <div class="entry-head"><span class="where">Stony Brook University</span><span class="what">B.S. Applied Math and Statistics</span></div>
+                <p class="place">Stony Brook, NY · 2014 – 2018 · Minor in Computer Science</p>
+              </div>
+            </li>
           </ol>
         </section>
 
-        <section aria-labelledby="skills-title">
+        <section id="skills" aria-labelledby="skills-title">
           <h2 class="label" id="skills-title">Skills &amp; Technologies</h2>
-          <ul class="chips">
-            <li>Python</li>
-            <li>TypeScript</li>
-            <li>JavaScript</li>
-            <li>Node.js</li>
-            <li>Angular</li>
-            <li>Three.js</li>
-            <li>SQL</li>
-            <li>Apache Spark</li>
-            <li>Apache Airflow</li>
-            <li>AWS</li>
-            <li>Amazon Redshift</li>
-          </ul>
+          <dl class="skills">
+            <div>
+              <dt>Languages</dt>
+              <dd>
+                <ul class="chips">
+                  <li>Java</li>
+                  <li>Python</li>
+                  <li>JavaScript</li>
+                  <li>TypeScript</li>
+                  <li>Scala</li>
+                  <li>SQL</li>
+                  <li>NoSQL</li>
+                  <li>HTML5</li>
+                  <li>CSS</li>
+                </ul>
+              </dd>
+            </div>
+            <div>
+              <dt>Frameworks</dt>
+              <dd>
+                <ul class="chips">
+                  <li>Spring Boot</li>
+                  <li>Spring Batch</li>
+                  <li>Node.js</li>
+                  <li>Angular</li>
+                  <li>React</li>
+                  <li>Django</li>
+                  <li>Flask</li>
+                  <li>Spark</li>
+                  <li>JUnit</li>
+                  <li>Mockito</li>
+                </ul>
+              </dd>
+            </div>
+            <div>
+              <dt>Cloud</dt>
+              <dd>
+                <ul class="chips">
+                  <li>Lambda</li>
+                  <li>S3</li>
+                  <li>CloudWatch</li>
+                  <li>CloudFormation</li>
+                  <li>VPC</li>
+                  <li>IAM</li>
+                  <li>EC2</li>
+                  <li>DynamoDB</li>
+                  <li>Event Hubs</li>
+                  <li>SQL Database</li>
+                </ul>
+              </dd>
+            </div>
+            <div>
+              <dt>DevOps</dt>
+              <dd>
+                <ul class="chips">
+                  <li>Docker</li>
+                  <li>Gradle</li>
+                  <li>Maven</li>
+                  <li>Git</li>
+                  <li>Yarn</li>
+                  <li>CDK</li>
+                  <li>Azure DevOps</li>
+                  <li>Kubernetes</li>
+                  <li>Jira</li>
+                  <li>Confluence</li>
+                </ul>
+              </dd>
+            </div>
+          </dl>
         </section>
       </main>
 

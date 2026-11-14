@@ -2,11 +2,15 @@
  * The animated ASCII scene behind the page, and the small console that drives it.
  *
  * scenes.js   the scenes and looks on offer
- * renderer.js draws one scene on a canvas that covers the window
+ * renderer.js draws one scene on a canvas that covers the band at the top of the page
+ * figures.js  the small animated figures in the project cards
+ * sound.js    the interface sounds
  * this file   loads scenes, runs the clock and wires up the buttons
  */
 import { SceneCanvas } from "./renderer.js";
 import { SCENES, LOOKS } from "./scenes.js";
+import { startFigures, setFiguresPaused, scramble } from "./figures.js";
+import { startSound } from "./sound.js";
 
 const PIECES = new URL("../../vendor/ascii-magic-art/pieces/", import.meta.url);
 const FADE_MS = 900; // matches the opacity transition on .scene-layer
@@ -34,10 +38,14 @@ let request = 0;
 /* ── the clock ───────────────────────────────────────────────────────── */
 
 let raf = 0, lastTick = 0, lastDraw = 0;
+let inView = true; // false once the scene has scrolled off the top of the window
 
 function tick(now) {
   raf = requestAnimationFrame(tick);
-  if (!current) return;
+  if (!current || !inView) {
+    lastTick = 0;
+    return;
+  }
   // a tab that was in the background comes back with one huge gap: don't jump the scene ahead
   if (lastTick) current.t += Math.min(0.25, (now - lastTick) / 1000);
   lastTick = now;
@@ -127,6 +135,7 @@ $("btn-look")?.addEventListener("click", (event) => {
 $("btn-pause")?.addEventListener("click", () => {
   state.paused = !state.paused;
   sync();
+  setFiguresPaused(state.paused);
   if (state.paused) halt();
   else run();
 });
@@ -143,9 +152,26 @@ addEventListener("keydown", (event) => {
   if (event.key === "Escape" && document.body.classList.contains("scene-only")) setSceneOnly(false);
 });
 
-/* ── keep the canvas covering the window ─────────────────────────────── */
+/* ── keep the canvas covering its band, and let it rest when out of sight ── */
 
 new ResizeObserver(() => current?.layout()).observe(host);
+if (typeof IntersectionObserver !== "undefined") {
+  new IntersectionObserver((entries) => { inView = entries[entries.length - 1].isIntersecting; }).observe(host);
+}
+
+/* ── the project cards ───────────────────────────────────────────────── */
+
+// A card's name resolves out of noise as the mouse comes onto it.
+const calm = matchMedia("(prefers-reduced-motion: reduce), (hover: none)");
+for (const card of document.querySelectorAll(".project")) {
+  card.addEventListener("pointerenter", (event) => {
+    if (event.pointerType !== "mouse" || calm.matches) return;
+    const name = card.querySelector("[data-scramble]");
+    if (name) scramble(name);
+  });
+}
 
 sync();
 show();
+startFigures({ startPaused: state.paused });
+startSound();

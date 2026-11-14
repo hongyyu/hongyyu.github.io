@@ -1,6 +1,6 @@
 # hongyyu.github.io
 
-My personal site: a profile page over an animated ASCII scene. Plain HTML, CSS and JavaScript, with no build step, served by GitHub Pages.
+My personal site: a profile page under an animated ASCII scene, with small ASCII figures for the projects. Plain HTML, CSS and JavaScript, with no build step, served by GitHub Pages.
 
 **[hongyyu.github.io](https://hongyyu.github.io/)**
 
@@ -16,26 +16,48 @@ Then open <http://localhost:4173>.
 
 ## Change the content
 
-Everything you read on the page is in [`index.html`](index.html): the intro, the buttons, the projects, the path and the skills. Edit it directly. There are commented-out examples for an email and a LinkedIn button next to the existing ones.
+Everything you read on the page is in [`index.html`](index.html): the intro, the buttons, the experience, the projects, the education and the skills. Edit it directly. There is a commented-out example of an email button next to the existing ones.
+
+A project card whose name is a link opens that link. A name in a plain `<span>` leaves the card closed, which suits work with no public page.
 
 ## The scene
 
-The background is a piece from [ASCII Magic](https://www.ascii-magic.com/ascii), an open-source library of animated ASCII art. The bar above the page switches the scene, switches the look (ASCII, letters, blocks, halftone dots and so on), pauses it, and hides the page so the scene can be seen on its own.
+A band across the top of the page plays a piece from [ASCII Magic](https://www.ascii-magic.com/ascii), an open-source library of animated ASCII art. The bar under it switches the scene, switches the look (ASCII, letters, blocks, halftone dots and so on), pauses everything that moves, and opens the scene up to the whole window.
 
-| File | What it does |
-| --- | --- |
-| [`assets/js/scenes.js`](assets/js/scenes.js) | The list of scenes and looks. The first of each is the default. |
-| [`assets/js/renderer.js`](assets/js/renderer.js) | Draws a scene on a canvas that covers the window, repainting only the characters that change. |
-| [`assets/js/main.js`](assets/js/main.js) | Loads scenes, runs the clock and wires up the buttons. |
-| [`vendor/ascii-magic-art/`](vendor/ascii-magic-art/) | The parts of the library this site uses, copied in so nothing loads from another site. |
+The band's height is `--band` at the top of [`assets/css/site.css`](assets/css/site.css).
 
 To add a scene, copy its file into `vendor/ascii-magic-art/pieces/` (the [vendor notes](vendor/ascii-magic-art/README.md) show how) and add a line to `scenes.js`.
 
 A link can open a particular scene and look: `/?scene=fuji-dawn-lake&look=dots`.
 
-Visitors who ask their system for reduced motion get a still frame until they press play.
+## The project figures
+
+Each project card has a small looping figure: floors stacking into buildings, requests crossing a hub, a voice and its answer. They are drawn in code, one character per cell, in [`assets/js/figures.js`](assets/js/figures.js). A card picks its figure with `data-figure`.
+
+To try a figure out, run this in the browser console on the page:
+
+```js
+(await import("/assets/js/figures.js")).frameText("dado", 6.5)
+```
+
+## Sound
+
+Sweeping the mouse across the skills ticks each one like a key, and links and buttons click. The sounds are made on the spot with Web Audio in [`assets/js/sound.js`](assets/js/sound.js); there are no sound files. Browsers only allow sound after the first click or key press, so hovering is silent until then. The speaker button in the bar turns sound off, and the choice is remembered.
+
+## Files
+
+| File | What it does |
+| --- | --- |
+| [`assets/js/scenes.js`](assets/js/scenes.js) | The list of scenes and looks. The first of each is the default. |
+| [`assets/js/renderer.js`](assets/js/renderer.js) | Draws a scene on a canvas that covers the band, repainting only the characters that change. |
+| [`assets/js/figures.js`](assets/js/figures.js) | The figures in the project cards, and the scramble on a card's name. |
+| [`assets/js/sound.js`](assets/js/sound.js) | The interface sounds and the speaker button. |
+| [`assets/js/main.js`](assets/js/main.js) | Loads scenes, runs the clock and wires up the bar. |
+| [`vendor/ascii-magic-art/`](vendor/ascii-magic-art/) | The parts of the library this site uses, copied in so nothing loads from another site. |
+
+Visitors who ask their system for reduced motion get still frames until they press play.
 
 ## Credits
 
 - Scenes and drawing code: [ascii-magic-art](https://github.com/kailashsr38/ascii-magic-art), MIT License.
-- The layout takes after [glyph](https://github.com/franvy/glyph) by Franvy.
+- The layout, the project figures and the key sounds take after [glyph](https://github.com/franvy/glyph) by Franvy. No code or assets are copied from it.

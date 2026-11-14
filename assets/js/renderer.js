@@ -15,6 +15,7 @@ import { paint, CELL_W, FONT, SHAPE_LOOKS } from "../../vendor/ascii-magic-art/r
 const MAX_BITMAP = 3456; // widest canvas to draw, in device pixels; CSS stretches it beyond that
 const INK = "#d4d4d8"; // for cells a piece leaves uncoloured
 const SHAPE_FPS = 10; // dot looks are repainted whole, so they run slower
+const MIN_CELL = 5; // CSS pixels: characters smaller than this cannot be read
 const SPACE = 32;
 
 /** Every glyph in every colour, drawn once and then stamped with drawImage. */
@@ -94,15 +95,8 @@ export class SceneCanvas {
 
   /** look: { id, cell } from scenes.js. Redraws at once. */
   setLook(look) {
-    const square = this.meta.cell === "square";
-    this.look = look.id;
+    this.look = look;
     this.mode = SHAPE_LOOKS[look.id] || "text";
-    // merging cell x cell squares into one character only works for pictures drawn as text
-    const merge = this.mode === "text" && square && look.cell > 1 ? look.cell : 1;
-    this.style = { look: look.id, merge: merge > 1 ? merge : undefined, lift: square ? false : undefined };
-    this.cols = Math.ceil(this.meta.cols / merge);
-    this.rows = Math.ceil(this.meta.rows / merge);
-    this.aspect = square ? 1 : 1 / CELL_W; // text cells are taller than they are wide
     this.fps = Math.min(this.meta.fps || 15, this.mode === "text" ? 30 : SHAPE_FPS);
     this.cell = 0; // forces layout to start the bitmap again
     this.layout();
@@ -114,12 +108,22 @@ export class SceneCanvas {
    */
   layout() {
     const width = this.host.clientWidth, height = this.host.clientHeight;
-    if (!width || !height || !this.cols) return;
+    if (!width || !height || !this.look) return;
+    const meta = this.meta, square = meta.cell === "square";
+    const aspect = square ? 1 : 1 / CELL_W; // text cells are taller than they are wide
+    // A picture drawn as text can merge squares of cells into one character. The look may
+    // ask for that (cell: 2), and a small host forces it, so the characters stay readable.
+    let merge = 1;
+    if (this.mode === "text" && square) {
+      const natural = Math.max(width / meta.cols, height / meta.rows); // CSS pixels per cell, unmerged
+      merge = Math.max(this.look.cell || 1, Math.ceil(MIN_CELL / natural));
+    }
+    const cols = Math.ceil(meta.cols / merge), rows = Math.ceil(meta.rows / merge);
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const cover = Math.max(width / this.cols, height / (this.rows * this.aspect));
-    const cell = Math.max(2, Math.min(Math.ceil(cover * dpr), Math.floor(MAX_BITMAP / this.cols)));
-    const cellH = this.aspect === 1 ? cell : Math.round(cell * this.aspect);
-    const W = this.cols * cell, H = this.rows * cellH;
+    const cover = Math.max(width / cols, height / (rows * aspect));
+    const cell = Math.max(2, Math.min(Math.ceil(cover * dpr), Math.floor(MAX_BITMAP / cols)));
+    const cellH = aspect === 1 ? cell : Math.round(cell * aspect);
+    const W = cols * cell, H = rows * cellH;
     const scale = Math.max(1, (width * dpr) / W, (height * dpr) / H); // above 1 only when MAX_BITMAP held the canvas back
     const cssW = (W / dpr) * scale, cssH = (H / dpr) * scale;
     const snap = (v) => Math.round(v * dpr) / dpr;
@@ -127,7 +131,11 @@ export class SceneCanvas {
     this.canvas.style.height = `${cssH}px`;
     this.canvas.style.left = `${snap((width - cssW) * this.focus[0])}px`;
     this.canvas.style.top = `${snap((height - cssH) * this.focus[1])}px`;
-    if (cell === this.cell && this.canvas.width === W && this.canvas.height === H) return;
+    if (cell === this.cell && merge === this.merge && this.canvas.width === W && this.canvas.height === H) return;
+    this.merge = merge;
+    this.cols = cols;
+    this.rows = rows;
+    this.style = { look: this.look.id, merge: merge > 1 ? merge : undefined, lift: square ? false : undefined };
     this.cell = cell;
     this.cellH = cellH;
     this.canvas.width = W; // this also clears it
