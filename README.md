@@ -1,6 +1,6 @@
 # hongyyu.github.io
 
-My personal site: a profile page under an animated ASCII scene, with small ASCII figures for the projects. Plain HTML, CSS and JavaScript, with no build step, served by GitHub Pages.
+My personal site: a profile page under an animated ASCII scene, with small isometric drawings for the projects and a pixel cat at the foot. Plain HTML, CSS and JavaScript, with no build step, served by GitHub Pages.
 
 **[hongyyu.github.io](https://hongyyu.github.io/)**
 
@@ -32,13 +32,9 @@ A link can open a particular scene and look: `/?scene=fuji-dawn-lake&look=dots`.
 
 ## The project figures
 
-Each project card has a small looping figure: floors stacking into buildings, requests crossing a hub, a voice and its answer. They are drawn in code, one character per cell, in [`assets/js/figures.js`](assets/js/figures.js). A card picks its figure with `data-figure`.
+Each project card has a small looping drawing of a machine on a base plate: floor plates dropping onto two towers, requests riding tracks through a hub, a speaker with a row of bars for its voice. They are isometric line drawings made in code in [`assets/js/figures.js`](assets/js/figures.js): a scene is a list of boxes and cylinders for a given moment, sorted back to front and drawn as SVG. A card picks its drawing with `data-figure`.
 
-To try a figure out, run this in the browser console on the page:
-
-```js
-(await import("/assets/js/figures.js")).frameText("dado", 6.5)
-```
+With an odd number of cards, the first takes a full row.
 
 ## Sound
 
@@ -46,7 +42,7 @@ Sweeping the mouse across the skills ticks each one like a key, and links and bu
 
 ## The cat
 
-At the foot of the page a pixel cat sleeps beside a ball of yarn. Click the strip to drop the yarn, drag the yarn to throw it, and the cat chases it and bats it back. Move the pointer along the cat to pet it. With the keyboard, Tab to the cat or the yarn and press Enter.
+At the foot of the page a dark pixel cat sleeps across from a ball of yarn. Click the strip to drop the yarn, drag the yarn to throw it, and the cat chases it and bats it back. Move the pointer along the cat to pet it. With the keyboard, Tab to the cat or the yarn and press Enter.
 
 The art is rows of characters, one per pixel, at the top of [`assets/js/yard.js`](assets/js/yard.js); change a row and the drawing changes. The count of pets is kept in the visitor's own browser, since the site has no server to hold a total.
 
@@ -56,7 +52,7 @@ The art is rows of characters, one per pixel, at the top of [`assets/js/yard.js`
 | --- | --- |
 | [`assets/js/scenes.js`](assets/js/scenes.js) | The list of scenes and looks. The first of each is the default. |
 | [`assets/js/renderer.js`](assets/js/renderer.js) | Draws a scene on a canvas that covers the band, repainting only the characters that change. |
-| [`assets/js/figures.js`](assets/js/figures.js) | The figures in the project cards, and the scramble on a card's name. |
+| [`assets/js/figures.js`](assets/js/figures.js) | The isometric drawings in the project cards, and the scramble on a card's name. |
 | [`assets/js/sound.js`](assets/js/sound.js) | The interface sounds and the speaker button. |
 | [`assets/js/yard.js`](assets/js/yard.js) | The cat and the yarn: the pixel art, the physics and what the cat does. |
 | [`assets/js/main.js`](assets/js/main.js) | Loads scenes, runs the clock and wires up the bar. |

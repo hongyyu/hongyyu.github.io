@@ -105,18 +105,20 @@
         </section>
 
         <!--
-          Each card has a figure (drawn by assets/js/figures.js, picked by data-figure), a name,
-          a line about it and its tools. A card whose name is a link opens that link; a name
-          in a plain <span> leaves the card closed, for work that has no public page.
+          Each card has a drawing (assets/js/figures.js, picked by data-figure), a name and
+          a status, a line about it and its tools. A card whose name is a link opens that
+          link; a name in a plain <span> leaves the card closed, for work with no public page.
         -->
         <section id="projects" aria-labelledby="projects-title">
-          <h2 class="label" id="projects-title">Projects <span class="count">03</span></h2>
+          <h2 class="label" id="projects-title">Projects</h2>
           <ul class="projects">
             <li>
               <article class="project">
                 <div class="shot"><div class="figure" data-figure="dado" aria-hidden="true"></div></div>
-                <div class="project-top"><span>01</span><span class="live">Live</span></div>
-                <h3><a href="https://hongyyu.github.io/3d-interactive-building-model/" aria-label="Dado"><span data-scramble aria-hidden="true">Dado</span><span class="arrow" aria-hidden="true">↗</span></a></h3>
+                <div class="project-head">
+                  <h3><a href="https://hongyyu.github.io/3d-interactive-building-model/" aria-label="Dado"><span data-scramble aria-hidden="true">Dado</span></a></h3>
+                  <span class="status live">Live</span>
+                </div>
                 <p>Interactive 3D massing and stacking diagrams for presenting a medical campus program.</p>
                 <div class="project-foot"><span>JavaScript · Three.js</span><a href="https://github.com/hongyyu/3d-interactive-building-model">Source</a></div>
               </article>
@@ -124,8 +126,10 @@
             <li>
               <article class="project">
                 <div class="shot"><div class="figure" data-figure="pharmacy" aria-hidden="true"></div></div>
-                <div class="project-top"><span>02</span><span>Walgreens</span></div>
-                <h3 aria-label="Pharmacy Clinical Portal"><span data-scramble aria-hidden="true">Pharmacy Clinical Portal</span></h3>
+                <div class="project-head">
+                  <h3 aria-label="Pharmacy Clinical Portal"><span data-scramble aria-hidden="true">Pharmacy Clinical Portal</span></h3>
+                  <span class="status">Walgreens</span>
+                </div>
                 <p>A distributed service that connects pharmacy systems across Walgreens.</p>
                 <div class="project-foot"><span>Java · Spring · Azure</span></div>
               </article>
@@ -133,8 +137,10 @@
             <li>
               <article class="project">
                 <div class="shot"><div class="figure" data-figure="alexa" aria-hidden="true"></div></div>
-                <div class="project-top"><span>03</span><span>Amazon</span></div>
-                <h3 aria-label="Alexa Sessions"><span data-scramble aria-hidden="true">Alexa Sessions</span></h3>
+                <div class="project-head">
+                  <h3 aria-label="Alexa Sessions"><span data-scramble aria-hidden="true">Alexa Sessions</span></h3>
+                  <span class="status">Amazon</span>
+                </div>
                 <p>Session handling in the Alexa back end, moved to a new session model.</p>
                 <div class="project-foot"><span>Java · Spring · AWS</span></div>
               </article>

@@ -1,312 +1,301 @@
 /*
- * The small animated ASCII figures in the project cards.
+ * The small isometric drawings in the project cards: each one a little machine on a
+ * base plate that works the way its project does.
  *
- * Each figure is a function that draws one frame onto a grid of characters. The grid
- * is shown as one <span> per cell, each exactly one character wide, so the picture
- * stays lined up even where a font is missing a glyph. Only cells that change are
- * touched, and a figure only runs while it is on screen.
+ *   dado      floor plates drop onto two towers, one at a time
+ *   pharmacy  requests ride tracks from stores, through a hub, to services and back
+ *   alexa     a speaker listens, thinks and answers; a row of bars shows the voice
  *
- * To add a figure: write a draw(grid, t) function, add it to FIGURES below, and put
+ * A drawing is a function of time that returns solids (boxes and cylinders, in units
+ * on the plate) and marks (lines drawn flat on the plate). Each frame they are sorted
+ * back to front and drawn as SVG paths. A figure only runs while it is on screen.
+ *
+ * To add a figure: write a scene(t) function, add it to FIGURES below, and put
  * <div class="figure" data-figure="its-name"> in a card.
  */
 
-const FPS = 12;
+const SVG = "http://www.w3.org/2000/svg";
+const FPS = 24;
+const VIEW = "0 0 300 225";
 const clamp = (v, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
+const easeOut = (p) => 1 - (1 - p) ** 3;
 /** A repeatable pseudo-random number in 0..1 for a whole number. */
 const hash = (n) => {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
 };
 
-/** A frame: one character and one tone (a CSS class) per cell. */
-class Grid {
-  constructor(cols, rows) {
-    this.cols = cols;
-    this.rows = rows;
-    this.chars = new Array(cols * rows);
-    this.tones = new Array(cols * rows);
-    this.clear();
+/* ── the projection ──────────────────────────────────────────────────── */
+
+// True isometric: x runs down to the right, y down to the left, z straight up.
+const COS = Math.cos(Math.PI / 6), SIN = 0.5;
+const SCALE = 1.32, ORIGIN = [127, 55];
+const P = (x, y, z = 0) => [ORIGIN[0] + (x - y) * COS * SCALE, ORIGIN[1] + (x + y) * SIN * SCALE - z * SCALE];
+const n = (v) => v.toFixed(1);
+const at = (p) => `${n(p[0])} ${n(p[1])}`;
+const poly = (points) => `M${points.map(at).join("L")}Z`;
+const line = (points) => `M${points.map(at).join("L")}`;
+const ellipse = (x, y, rx, ry) => `M${n(x - rx)} ${n(y)}A${n(rx)} ${n(ry)} 0 1 0 ${n(x + rx)} ${n(y)}A${n(rx)} ${n(ry)} 0 1 0 ${n(x - rx)} ${n(y)}Z`;
+
+/* ── drawing ─────────────────────────────────────────────────────────── */
+
+/** Paths are made once and reused: each frame only rewrites what changed. */
+class Pen {
+  constructor(svg) {
+    this.svg = svg;
+    this.pool = [];
+    this.used = 0;
   }
 
-  clear() {
-    this.chars.fill(" ");
-    this.tones.fill("");
+  begin() {
+    this.used = 0;
   }
 
-  put(x, y, char, tone = "") {
-    if (x < 0 || y < 0 || x >= this.cols || y >= this.rows) return;
-    const i = y * this.cols + x;
-    this.chars[i] = char;
-    this.tones[i] = tone;
-  }
-
-  text(x, y, string, tone = "") {
-    for (let i = 0; i < string.length; i++) this.put(x + i, y, string[i], tone);
-  }
-
-  /** A box in single lines, corners at (x, y) and (x + w - 1, y + h - 1). */
-  box(x, y, w, h, tone = "ln", corners = "┌┐└┘") {
-    for (let i = 1; i < w - 1; i++) {
-      this.put(x + i, y, "─", tone);
-      this.put(x + i, y + h - 1, "─", tone);
+  path(d, kind, style = "") {
+    let el = this.pool[this.used];
+    if (!el) {
+      el = document.createElementNS(SVG, "path");
+      el.now = {};
+      this.svg.append(el);
+      this.pool.push(el);
     }
-    for (let j = 1; j < h - 1; j++) {
-      this.put(x, y + j, "│", tone);
-      this.put(x + w - 1, y + j, "│", tone);
+    this.used++;
+    if (el.now.d !== d) el.setAttribute("d", (el.now.d = d));
+    if (el.now.kind !== kind) el.setAttribute("class", (el.now.kind = kind));
+    if (el.now.style !== style) el.setAttribute("style", (el.now.style = style));
+  }
+
+  end() {
+    for (let i = this.used; i < this.pool.length; i++) {
+      const el = this.pool[i];
+      if (el.now.d !== "") el.setAttribute("d", (el.now.d = ""));
     }
-    this.put(x, y, corners[0], tone);
-    this.put(x + w - 1, y, corners[1], tone);
-    this.put(x, y + h - 1, corners[2], tone);
-    this.put(x + w - 1, y + h - 1, corners[3], tone);
   }
 }
 
-/* ── Dado: floors stacking up into two buildings ─────────────────────── */
-
-/**
- * A block of floors in the classic ASCII box projection. The front is w characters
- * wide with its bottom row at `bottom`; the top and side lean d characters back.
- * `floors` holds a tone per floor, lowest first.
- *
- *       ________
- *      /       /|
- *     /_______/ |
- *     |_______| /
- *     |_______|/
- */
-function slab(g, x, bottom, w, d, floors) {
-  const n = floors.length;
-  if (!n) return;
-  const top = bottom - n + 1; // the first row of the front
-  // the back edge of the roof
-  for (let i = 0; i < w - 1; i++) g.put(x + d + i, top - d - 1, "_", "ln");
-  // the roof
-  for (let j = 0; j < d; j++) {
-    const left = x + d - 1 - j, row = top - d + j;
-    g.put(left, row, "/", "ln");
-    for (let i = 1; i < w - 1; i++) g.put(left + i, row, j === d - 1 ? "_" : " ", "ln");
-    g.put(left + w - 1, row, "/", "ln");
-  }
-  // the front: one row per floor, in that floor's tone
-  for (let i = 0; i < n; i++) {
-    const row = top + i, tone = floors[n - 1 - i];
-    g.put(x, row, "|", "ln");
-    for (let k = 1; k < w - 1; k++) g.put(x + k, row, "_", tone);
-    g.put(x + w - 1, row, "|", "ln");
-  }
-  // the side: blank what it covers, so it hides whatever is behind, then draw its far edge
-  const edge = x + w - 1 + d;
-  for (let row = top - d; row <= bottom; row++) {
-    const from = row < top ? x + w + (top - 1 - row) : x + w; // just right of the roof, or of the front
-    const to = row <= bottom - d ? edge - 1 : edge - (row - (bottom - d)); // just left of the far edge
-    for (let col = from; col <= to; col++) g.put(col, row, " ");
-  }
-  for (let row = top - d; row <= bottom - d; row++) g.put(edge, row, "|", "ln");
-  for (let i = 0; i < d; i++) g.put(edge - i, bottom - d + 1 + i, "/", "ln");
+/** A box: the three faces that can be seen. `lit` turns it the accent colour. */
+function drawBox(pen, b) {
+  const { x0, y0, z0, x1, y1, z1 } = b, lit = b.lit ? " lit" : "";
+  pen.path(poly([P(x0, y1, z1), P(x1, y1, z1), P(x1, y1, z0), P(x0, y1, z0)]), `left${lit}`);
+  pen.path(poly([P(x1, y0, z1), P(x1, y1, z1), P(x1, y1, z0), P(x1, y0, z0)]), `right${lit}`);
+  pen.path(poly([P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1)]), `top${lit}`);
 }
+
+/** A cylinder standing on its end, with an optional ring drawn on its top. */
+function drawCylinder(pen, c) {
+  const [x, bottom] = P(c.cx, c.cy, c.z0), top = P(c.cx, c.cy, c.z1)[1];
+  const rx = c.r * COS * Math.SQRT2 * SCALE, ry = c.r * SIN * Math.SQRT2 * SCALE;
+  const lit = c.lit ? " lit" : "";
+  pen.path(`M${n(x - rx)} ${n(top)}L${n(x - rx)} ${n(bottom)}A${n(rx)} ${n(ry)} 0 0 0 ${n(x + rx)} ${n(bottom)}L${n(x + rx)} ${n(top)}Z`, `left${lit}`);
+  pen.path(ellipse(x, top, rx, ry), `top${lit}`);
+  if (c.ring) pen.path(ellipse(x, top, rx * 0.68, ry * 0.68), `ring${c.ring.lit ? " lit" : ""}`, c.ring.style || "");
+}
+
+/** The base plate: a slab with rounded corners. */
+function drawPlate(pen, s) {
+  const { x0, y0, x1, y1, z0, z1, r } = s;
+  const outline = (z) => {
+    const p = (x, y) => at(P(x, y, z));
+    return `M${p(x0 + r, y0)}L${p(x1 - r, y0)}Q${p(x1, y0)} ${p(x1, y0 + r)}L${p(x1, y1 - r)}Q${p(x1, y1)} ${p(x1 - r, y1)}`
+      + `L${p(x0 + r, y1)}Q${p(x0, y1)} ${p(x0, y1 - r)}L${p(x0, y0 + r)}Q${p(x0, y0)} ${p(x0 + r, y0)}Z`;
+  };
+  // where the rounded corners reach furthest left and right on screen
+  const leftmost = (z) => P(x0 + r / 4, y1 - r / 4, z), rightmost = (z) => P(x1 - r / 4, y0 + r / 4, z);
+  pen.path(outline(z0), "right");
+  pen.path(poly([leftmost(z1), rightmost(z1), rightmost(z0), leftmost(z0)]), "right fill");
+  pen.path(line([leftmost(z1), leftmost(z0)]) + line([rightmost(z1), rightmost(z0)]), "edge");
+  pen.path(outline(z1), "top");
+}
+
+/** -1 if a has to be drawn before b, 1 if after, 0 if it does not matter. */
+function order(a, b) {
+  const x = a.x1 <= b.x0 ? -1 : b.x1 <= a.x0 ? 1 : 0;
+  const y = a.y1 <= b.y0 ? -1 : b.y1 <= a.y0 ? 1 : 0;
+  if (x && y && x !== y) return 0; // side by side across the view: neither hides the other
+  if (x || y) return x || y;
+  return a.z1 <= b.z0 ? -1 : b.z1 <= a.z0 ? 1 : 0;
+}
+
+/** Back to front: keep taking a solid that nothing left has to come before. */
+function backToFront(solids) {
+  const left = solids.slice(), sorted = [];
+  while (left.length) {
+    let pick = left.findIndex((a) => !left.some((b) => b !== a && order(b, a) < 0));
+    if (pick < 0) pick = 0; // a cycle: should not happen in these scenes
+    sorted.push(left.splice(pick, 1)[0]);
+  }
+  return sorted;
+}
+
+const box = (x0, y0, x1, y1, z0, z1, lit = false) => ({ x0, y0, x1, y1, z0, z1, lit });
+const cylinder = (cx, cy, r, z0, z1, more = {}) => ({ round: true, cx, cy, r, x0: cx - r, y0: cy - r, x1: cx + r, y1: cy + r, z0, z1, ...more });
+
+const PLATE = { x0: 0, y0: 0, x1: 120, y1: 80, z0: -7, z1: 0, r: 11 };
+
+function render(pen, scene) {
+  pen.begin();
+  drawPlate(pen, PLATE);
+  for (const mark of scene.marks || []) pen.path(line(mark.map(([x, y]) => P(x, y, 0))), "mark");
+  for (const solid of backToFront(scene.solids)) (solid.round ? drawCylinder : drawBox)(pen, solid);
+  pen.end();
+}
+
+/* ── Dado: floor plates dropping onto two towers ─────────────────────── */
 
 const DADO = {
-  bottom: 10,
-  depth: 2,
-  buildings: [
-    { x: 1, w: 10, floors: ["c1", "c1", "c2", "c3", "c3", "c4"] },
-    { x: 15, w: 10, floors: ["c2", "c2", "c1", "c4"] },
+  towers: [
+    { x0: 14, y0: 12, x1: 50, y1: 48 },
+    { x0: 66, y0: 24, x1: 98, y1: 56 },
   ],
-  // which building gets the next floor
-  order: [0, 1, 0, 1, 0, 1, 0, 1, 0, 0],
-  step: 0.55, // seconds per floor
-  hold: 3.2,
-  clear: 0.7,
+  order: [0, 1, 0, 1, 0, 1, 0, 0], // which tower gets the next floor
+  floor: 6, // how thick a floor is
+  pitch: 7.6, // floor to floor
+  step: 0.6, // seconds per floor
+  hold: 3.4,
+  clear: 0.9,
 };
 
-function dado(g, t) {
-  const { bottom, depth, buildings, order, step, hold, clear } = DADO;
-  const build = order.length * step, cycle = build + hold + clear;
-  const at = t % cycle;
-
-  let placed = order.length, flying = -1, drop = 0, lit = -1;
-  if (at < build) {
-    placed = Math.floor(at / step);
-    flying = placed;
-    const p = clamp(((at % step) / step) * 1.5); // lands two thirds of the way through its step
-    drop = Math.round((1 - p * p) * 4); // rows still to fall
-  } else if (at < build + hold) {
-    lit = Math.floor((at - build) / 0.32) % order.length; // a highlight walks the floors
-  } else {
-    placed = Math.floor((1 - (at - build - hold) / clear) * order.length); // lifted away, last floor first
-  }
-
-  // the empty sites
-  for (const b of buildings) for (let i = 0; i < b.w; i++) g.put(b.x + i, bottom, "·", "fa");
-
-  buildings.forEach((b, index) => {
-    const mine = order.map((owner, i) => (owner === index ? i : -1)).filter((i) => i >= 0);
-    const done = mine.filter((i) => i < placed).length;
-    const floors = b.floors.slice(0, done).map((tone, level) => (mine[level] === lit ? "hi" : tone));
-    slab(g, b.x, bottom, b.w, depth, floors);
-    if (flying >= 0 && order[flying] === index && drop > 0) {
-      slab(g, b.x, bottom - done - drop, b.w, depth, [b.floors[done]]);
-    } else if (flying >= 0 && order[flying] === index) {
-      slab(g, b.x, bottom, b.w, depth, [...floors, b.floors[done]]); // it has landed
+function dado(t) {
+  const { towers, order: turns, floor, pitch, step, hold, clear } = DADO;
+  const build = turns.length * step, now = t % (build + hold + clear);
+  const solids = [];
+  for (const tower of towers) solids.push(box(tower.x0 - 3, tower.y0 - 3, tower.x1 + 3, tower.y1 + 3, 0, 1.2)); // its footing
+  const levels = towers.map(() => 0);
+  turns.forEach((which, i) => {
+    const level = levels[which]++;
+    let lift = 0, lit = false;
+    if (now < build) { // dropping in, one after another
+      const age = now - i * step;
+      if (age < 0) return;
+      lift = (1 - easeOut(clamp(age / 0.42))) * 36;
+      lit = age < step; // the newest floor glows
+    } else if (now < build + hold) { // a highlight walks the floors
+      lit = Math.floor((now - build) / 0.42) % turns.length === i;
+    } else { // lifted away, last floor first
+      const gone = ((now - build - hold) / clear) * turns.length - (turns.length - 1 - i);
+      if (gone >= 1) return;
+      lift = gone > 0 ? gone * gone * 36 : 0;
     }
+    const tower = towers[which], z = 1.2 + level * pitch + lift;
+    solids.push(box(tower.x0, tower.y0, tower.x1, tower.y1, z, z + floor, lit));
   });
+  solids.push(cylinder(108, 68, 4.5, 0, 3)); // a dial on the plate
+  return { solids, marks: [[[8, 66], [22, 66]], [[8, 71], [22, 71]]] };
 }
 
 /* ── Pharmacy portal: requests crossing a hub between stores and services ── */
 
-const ROWS = [1, 4, 7];
+const ROWS = [13, 40, 67];
 const PORTAL = (() => {
-  const toHub = (i) => {
-    const r = ROWS[i], cells = [[4, r], [5, r]];
-    for (let y = r; y !== 4; y += Math.sign(4 - r)) cells.push([6, y]);
-    cells.push([6, 4], [7, 4], [8, 4]);
-    return cells;
+  // the track from a store to the hub, and from the hub to a service
+  const inbound = (i) => (i === 1 ? [[22, 40], [42, 40]] : [[22, ROWS[i]], [32, ROWS[i]], [32, 40], [42, 40]]);
+  const outbound = (j) => (j === 1 ? [[78, 40], [98, 40]] : [[78, 40], [88, 40], [88, ROWS[j]], [98, ROWS[j]]]);
+  const length = (track) => track.slice(1).reduce((sum, p, k) => sum + Math.hypot(p[0] - track[k][0], p[1] - track[k][1]), 0);
+  /** The point a distance d along a track. */
+  const along = (track, d) => {
+    for (let k = 1; k < track.length; k++) {
+      const a = track[k - 1], b = track[k], seg = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (d <= seg) return [a[0] + ((b[0] - a[0]) * d) / seg, a[1] + ((b[1] - a[1]) * d) / seg];
+      d -= seg;
+    }
+    return track[track.length - 1];
   };
-  const fromHub = (j) => {
-    const r = ROWS[j], cells = [[18, 4], [19, 4]];
-    for (let y = 4; y !== r; y += Math.sign(r - 4)) cells.push([20, y]);
-    cells.push([20, r], [21, r], [22, r]);
-    return cells;
-  };
-  // a request goes store -> hub -> service, waits, and its answer comes back the same way
+  const SPEED = 58; // units a second
+  /** A request: store i -> hub -> service j, a pause, and the answer back the same way. */
   const trip = (i, j) => {
-    const a = toHub(i), b = fromHub(j);
-    const wait = (what, n) => new Array(n).fill(what);
-    return [
-      ...wait({ store: i }, 2),
-      ...a.map((cell) => ({ cell, tone: "ac" })),
-      ...wait({ hub: true }, 3),
-      ...b.map((cell) => ({ cell, tone: "ac" })),
-      ...wait({ service: j }, 4),
-      ...[...b].reverse().map((cell) => ({ cell, tone: "hi" })),
-      ...wait({ hub: true }, 3),
-      ...[...a].reverse().map((cell) => ({ cell, tone: "hi" })),
-      ...wait({ store: i }, 2),
+    const a = inbound(i), b = outbound(j), ta = length(a) / SPEED, tb = length(b) / SPEED;
+    const stages = [
+      [0.15, () => ({ store: i })],
+      [ta, (p) => ({ packet: along(a, p * length(a)), lit: true })],
+      [0.25, () => ({ hub: true })],
+      [tb, (p) => ({ packet: along(b, p * length(b)), lit: true })],
+      [0.35, () => ({ service: j })],
+      [tb, (p) => ({ packet: along(b, (1 - p) * length(b)) })],
+      [0.25, () => ({ hub: true })],
+      [ta, (p) => ({ packet: along(a, (1 - p) * length(a)) })],
+      [0.15, () => ({ store: i })],
     ];
+    return (time) => {
+      for (const [duration, what] of stages) {
+        if (time < duration) return what(time / duration);
+        time -= duration;
+      }
+      return null;
+    };
   };
   return {
-    speed: 13, // steps a second
-    cycle: 7.2,
-    flows: [
-      { start: 0, steps: trip(0, 1) },
-      { start: 1.5, steps: trip(2, 0) },
-      { start: 3.1, steps: trip(1, 2) },
-      { start: 4.4, steps: trip(0, 2) },
-    ],
+    cycle: 7.4,
+    flows: [[0, trip(0, 1)], [1.6, trip(2, 0)], [3.2, trip(1, 2)], [4.6, trip(0, 2)]],
+    marks: [0, 1, 2].flatMap((k) => [inbound(k), outbound(k)]),
   };
 })();
 
-function pharmacy(g, t) {
-  const now = { stores: new Set(), services: new Set(), hub: false, dots: [] };
-  for (const flow of PORTAL.flows) {
-    const local = (((t - flow.start) % PORTAL.cycle) + PORTAL.cycle) % PORTAL.cycle;
-    const step = flow.steps[Math.floor(local * PORTAL.speed)];
-    if (!step) continue;
-    if (step.cell) now.dots.push(step);
-    else if (step.hub) now.hub = true;
-    else if ("store" in step) now.stores.add(step.store);
-    else now.services.add(step.service);
+function pharmacy(t) {
+  const busy = { stores: new Set(), services: new Set(), hub: false }, packets = [];
+  for (const [start, trip] of PORTAL.flows) {
+    const what = trip((((t - start) % PORTAL.cycle) + PORTAL.cycle) % PORTAL.cycle);
+    if (!what) continue;
+    if (what.packet) packets.push(what);
+    else if (what.hub) busy.hub = true;
+    else if ("store" in what) busy.stores.add(what.store);
+    else busy.services.add(what.service);
   }
-
-  const services = ["DB", "ID", "WS"];
-  ROWS.forEach((r, i) => {
-    // a store on the left
-    const store = now.stores.has(i) ? "hi" : "ln";
-    g.box(0, r - 1, 4, 3, store);
-    g.text(1, r, "Rx", now.stores.has(i) ? "hi" : "");
-    g.put(3, r, "├", store);
-    g.text(4, r, "──", "ln");
-    // a service on the right
-    const service = now.services.has(i) ? "ac" : "ln";
-    g.box(23, r - 1, 4, 3, service);
-    g.text(24, r, services[i], now.services.has(i) ? "ac" : "");
-    g.put(23, r, "┤", service);
-    g.text(21, r, "──", "ln");
+  const solids = [];
+  ROWS.forEach((y, i) => {
+    solids.push(box(6, y - 7, 20, y + 7, 0, 9, busy.stores.has(i))); // a store
+    solids.push(box(100, y - 7, 114, y + 7, 0, 13, busy.services.has(i))); // a service
   });
-  // the two buses that gather the links
-  for (let y = 2; y <= 6; y++) {
-    g.put(6, y, "│", "ln");
-    g.put(20, y, "│", "ln");
-  }
-  g.put(6, 1, "┐", "ln"); g.put(6, 4, "┼", "ln"); g.put(6, 7, "┘", "ln");
-  g.put(20, 1, "┌", "ln"); g.put(20, 4, "┼", "ln"); g.put(20, 7, "└", "ln");
-  g.text(7, 4, "──", "ln");
-  g.text(18, 4, "──", "ln");
-  // the hub, with a pharmacy cross
-  const hub = now.hub ? "hi" : "ln";
-  g.box(9, 2, 9, 5, hub);
-  g.put(9, 4, "┤", hub);
-  g.put(17, 4, "├", hub);
-  const cross = now.hub ? "hi" : "ac";
-  g.put(13, 3, "┃", cross);
-  g.text(12, 4, "━╋━", cross);
-  g.put(13, 5, "┃", cross);
-
-  for (const dot of now.dots) g.put(dot.cell[0], dot.cell[1], "●", dot.tone);
+  solids.push(box(44, 24, 76, 56, 0, 20, busy.hub)); // the hub
+  // the pharmacy cross on its roof, always lit
+  solids.push(box(50, 37, 57, 43, 20, 22, true), box(57, 30, 63, 50, 20, 22, true), box(63, 37, 70, 43, 20, 22, true));
+  for (const { packet: [x, y], lit } of packets) solids.push(box(x - 2, y - 2, x + 2, y + 2, 0, 4, lit));
+  return { solids, marks: PORTAL.marks };
 }
 
 /* ── Alexa: a voice comes in, a pause, an answer goes out ────────────── */
 
-const LEVELS = " ▁▂▃▄▅▆▇█";
-const VOICE = { cycle: 8, bars: 24, rows: 6, left: 2, base: 6 };
+const VOICE = { cycle: 8, bars: 7 };
 
-function alexa(g, t) {
-  const at = t % VOICE.cycle;
+function alexa(t) {
+  const now = t % VOICE.cycle;
   // idle, listening, thinking, answering, idle
-  const phase = at < 0.8 ? "idle" : at < 3.2 ? "listen" : at < 4.2 ? "think" : at < 7.2 ? "answer" : "idle";
-  const tick = Math.floor(t * FPS);
+  const phase = now < 0.8 ? "idle" : now < 3.2 ? "listen" : now < 4.2 ? "think" : now < 7.2 ? "answer" : "idle";
+  const tick = Math.floor(t * 12);
 
   // how loud each moment is: syllables for a voice, a steadier swell for the answer
   let loud = 0;
-  if (phase === "listen") loud = 0.35 + 0.65 * Math.abs(Math.sin(at * 7.3)) * (0.5 + 0.5 * hash(Math.floor(at * 5)));
-  if (phase === "answer") loud = 0.55 + 0.4 * Math.sin(at * 3.1) * Math.sin(at * 1.7 + 1);
-  const edge = Math.min(1, (at - (phase === "listen" ? 0.8 : 4.2)) * 4, ((phase === "listen" ? 3.2 : 7.2) - at) * 4);
-  loud *= clamp(edge);
+  if (phase === "listen") loud = 0.35 + 0.65 * Math.abs(Math.sin(now * 7.3)) * (0.5 + 0.5 * hash(Math.floor(now * 5)));
+  if (phase === "answer") loud = 0.6 + 0.35 * Math.sin(now * 3.1) * Math.sin(now * 1.7 + 1);
+  const from = phase === "listen" ? 0.8 : 4.2, to = phase === "listen" ? 3.2 : 7.2;
+  loud *= clamp(Math.min((now - from) * 4, (to - now) * 4));
 
-  const tone = phase === "answer" ? "ac" : "hi";
-  for (let c = 0; c < VOICE.bars; c++) {
-    const x = (c + 0.5) / VOICE.bars;
-    const window = Math.sin(Math.PI * x) ** 1.4; // quieter towards the edges
-    const wobble = phase === "answer"
-      ? 0.5 + 0.5 * Math.sin(c * 0.9 - t * 9) * Math.sin(c * 0.37 + t * 4)
-      : hash(c * 13 + tick * 7);
-    const level = Math.round(clamp(loud * window * (0.35 + 0.65 * wobble)) * VOICE.rows * 8);
-    for (let r = 0; r < VOICE.rows; r++) {
-      const fill = clamp(level - r * 8, 0, 8);
-      if (fill) g.put(VOICE.left + c, VOICE.base - r, LEVELS[fill], tone);
-    }
-    if (!level) g.put(VOICE.left + c, VOICE.base, "·", "fa"); // silence
-  }
-
+  const solids = [];
   // the speaker, with its light ring
-  g.box(0, 7, 28, 3, "ln", "╭╮╰╯");
-  const head = (tick * 2) % VOICE.bars; // where the bright stretch is while it thinks
-  for (let c = 0; c < VOICE.bars; c++) {
-    let lamp = "fa";
-    if (phase === "listen") lamp = "ac";
-    if (phase === "think") lamp = (c - head + VOICE.bars) % VOICE.bars < 6 ? "hi" : "ln";
-    if (phase === "answer") lamp = Math.sin(at * 6) > -0.2 ? "ac" : "ln";
-    g.put(VOICE.left + c, 8, "━", lamp);
+  const ring = { lit: phase !== "idle" };
+  if (phase === "think") ring.style = `stroke-dasharray:10 8;stroke-dashoffset:${-tick * 3}`; // the light chases round
+  if (phase === "answer" && Math.sin(now * 6) < -0.2) ring.lit = false; // and pulses as it speaks
+  solids.push(cylinder(40, 40, 22, 0, 30, { ring }));
+  // the voice, as a row of bars
+  for (let i = 0; i < VOICE.bars; i++) {
+    const middle = Math.sin((Math.PI * (i + 0.5)) / VOICE.bars) ** 1.2; // taller towards the middle
+    const wobble = phase === "answer"
+      ? 0.5 + 0.5 * Math.sin(i * 0.9 - t * 9) * Math.sin(i * 0.37 + t * 4)
+      : hash(i * 13 + tick * 7);
+    const height = 1.5 + clamp(loud * middle * (0.35 + 0.65 * wobble)) * 30;
+    const x = 72 + i * 6.3;
+    solids.push(box(x, 33, x + 4.3, 47, 0, height, phase === "answer" && height > 3));
   }
+  return { solids, marks: [[[70, 56], [116, 56]], [[70, 24], [116, 24]]] };
 }
 
 /* ── the stage ───────────────────────────────────────────────────────── */
 
 /** still: the moment to show when nothing may move. */
 const FIGURES = {
-  dado: { cols: 28, rows: 11, draw: dado, still: 6.5 },
-  pharmacy: { cols: 27, rows: 9, draw: pharmacy, still: 0.9 },
-  alexa: { cols: 28, rows: 10, draw: alexa, still: 5.3 },
+  dado: { scene: dado, still: 6 },
+  pharmacy: { scene: pharmacy, still: 0.6 },
+  alexa: { scene: alexa, still: 5.3 },
 };
-
-/** One frame of a figure as plain text, for trying a figure out in the browser console. */
-export function frameText(name, t) {
-  const figure = FIGURES[name], grid = new Grid(figure.cols, figure.rows);
-  figure.draw(grid, t);
-  const lines = [];
-  for (let y = 0; y < grid.rows; y++) lines.push(grid.chars.slice(y * grid.cols, (y + 1) * grid.cols).join(""));
-  return lines.join("\n");
-}
 
 const stage = []; // every figure on the page
 let raf = 0, last = 0, paused = false;
@@ -314,31 +303,15 @@ let raf = 0, last = 0, paused = false;
 function mount(el) {
   const figure = FIGURES[el.dataset.figure];
   if (!figure) return null;
-  const grid = new Grid(figure.cols, figure.rows);
-  const cells = [];
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("viewBox", VIEW);
+  svg.setAttribute("class", "iso");
   el.textContent = "";
-  for (let y = 0; y < figure.rows; y++) {
-    const row = document.createElement("div");
-    for (let x = 0; x < figure.cols; x++) {
-      const cell = document.createElement("span");
-      cell.textContent = " ";
-      row.append(cell);
-      cells.push(cell);
-    }
-    el.append(row);
-  }
-  return { el, figure, grid, cells, t: 0, visible: true, shown: { chars: [], tones: [] } };
+  el.append(svg);
+  return { el, figure, pen: new Pen(svg), t: figure.still, visible: true };
 }
 
-function draw(item) {
-  const { grid, cells, shown } = item;
-  grid.clear();
-  item.figure.draw(grid, item.t);
-  for (let i = 0; i < cells.length; i++) {
-    if (grid.chars[i] !== shown.chars[i]) cells[i].textContent = shown.chars[i] = grid.chars[i];
-    if (grid.tones[i] !== shown.tones[i]) cells[i].className = shown.tones[i] = grid.tones[i];
-  }
-}
+const draw = (item) => render(item.pen, item.figure.scene(item.t));
 
 function tick(now) {
   raf = requestAnimationFrame(tick);
@@ -372,7 +345,6 @@ export function startFigures({ startPaused = false } = {}) {
   for (const el of document.querySelectorAll("[data-figure]")) {
     const item = mount(el);
     if (!item) continue;
-    item.t = item.figure.still;
     draw(item);
     stage.push(item);
   }

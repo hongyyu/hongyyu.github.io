@@ -28,49 +28,51 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 // One string per row of pixels, one character per pixel. "." is empty.
 const INK = {
-  "#": "#cfa46b", // fur
-  s: "#8b5a2b", // stripes, and eyes when they are shut
-  w: "#f3efe6", // muzzle and socks
-  e: "#17171a", // eyes
-  p: "#f08fc0", // nose, blush and hearts
-  a: "#f2766b", // yarn
-  A: "#b94f4a", // yarn, the strands in shadow
+  "#": "#3d3c44", // the cat
+  s: "#6d6c76", // its eyes when they are shut
+  e: "#f4f2ee", // its eyes
+  p: "#f4a0ae", // blush, hearts and yarn
+  a: "#f4a0ae",
+  A: "#d07f92", // yarn, the strands in shadow
   z: "#8f8f99", // a sleepy z
 };
+
+const BODY = ".###########...";
+const BLUSH = ".#p#######p#...";
 
 /** The cat sitting, seen from the front. `eyes` are its two eye rows; the rest can be swapped by row number. */
 function front(eyes, swap = {}) {
   const rows = [
     "..#.......#....",
     ".###.....###...",
-    ".###########...",
-    ".###s#s#s###...",
+    BODY,
+    BODY,
     eyes[0],
     eyes[1],
-    ".###########...",
-    ".####wpw####...",
-    "..###www###....",
+    BLUSH,
+    BODY,
+    "..#########....",
     "..#########..#.",
     ".###########.#.",
-    ".#s#######s#.s.",
-    ".##ww###ww####.",
+    ".###########.#.",
+    ".#############.",
   ];
   for (const [row, pixels] of Object.entries(swap)) rows[row] = pixels;
   return rows;
 }
-const OPEN = ".###########...";
+const OPEN = [".##e#####e##...", ".##e#####e##..."];
 
 /** The cat from the side, facing right. */
-function side({ tail = "up", eye = "e", legs, paw = false }) {
+function side({ tail = "up", shut = false, legs, paw = false }) {
   const up = tail === "up";
   return [
     "............#...#..",
     "...........###.###.",
     `${up ? ".#........." : "..........."}#######.`,
-    `${up ? ".#........." : "..........."}#${eye}###${eye}#.`,
-    `${up ? "..#........" : "###........"}###p###.`,
-    "...#########wwwww..",
-    `...##s##s##s####${paw ? "##w" : "..."}`,
+    `${up ? ".#........." : "..........."}${shut ? "#######." : "#e###e#."}`,
+    `${up ? "..#........" : "###........"}${shut ? "#s###s#." : "#e###e#."}`,
+    "...#########p###p#.",
+    `...#############${paw ? "###" : "..."}`,
     "...#############...",
     "...############....",
     ...legs,
@@ -79,33 +81,33 @@ function side({ tail = "up", eye = "e", legs, paw = false }) {
 
 // Front views never flip. Side views are drawn facing right and flipped for left.
 const CAT = {
-  sit: front([OPEN, ".##e#####e##..."]),
-  wag: front([OPEN, ".##e#####e##..."], { 9: "..#########...#" }),
-  blink: front([OPEN, ".##s#####s##..."]),
-  left: front([OPEN, ".#e#####e###..."]),
-  right: front([OPEN, ".###e#####e#..."]),
-  happy: front([".##s#####s##...", ".#s#s###s#s#..."], { 6: ".#p#######p#..." }),
-  wow: front([".##e#####e##...", ".##e#####e##..."], { 9: "..#########..#.", 8: "..###wew###...." }),
-  sulk: front([".#s#######s#...", ".##s#####s##..."], { 7: ".####www####..." }),
+  sit: front(OPEN),
+  wag: front(OPEN, { 9: "..#########...#" }),
+  blink: front([BODY, ".##s#####s##..."]),
+  left: front([".#e#####e###...", ".#e#####e###..."]),
+  right: front([".###e#####e#...", ".###e#####e#..."]),
+  happy: front([".##e#####e##...", ".#e#e###e#e#..."]),
+  wow: front([".##ee###ee##...", ".##ee###ee##..."]),
+  sulk: front([BODY, ".##ee###ee##..."], { 6: BODY }),
   sleep: [
     "..#.......#....",
     ".###.....###...",
-    ".###########...",
-    ".###s#s#s###...",
+    BODY,
+    BODY,
     ".##s#####s##...",
-    ".####wpw####...",
+    BLUSH,
     ".#############.",
-    "##s#########s##",
+    "###############",
   ],
   ready: [ // low to the ground, eyes wide, tail up
     "..#.......#...#",
     ".###.....###..#",
-    ".###########.s.",
-    ".##e#####e##.#.",
-    ".##e#####e##.#.",
-    ".####wpw####.#.",
+    ".###########.#.",
+    ".##ee###ee##.#.",
+    ".##ee###ee##.#.",
+    ".#p#######p#.#.",
     ".#############.",
-    "##ww######ww##.",
+    "##############.",
   ],
   walk: [
     side({ legs: ["...#.#......#.#....", "...#.#......#.#...."] }),
@@ -115,7 +117,7 @@ const CAT = {
     side({ tail: "back", legs: ["..##..........##...", ".#..............#.."] }),
     side({ tail: "back", legs: [".....##....##......", "......#....#......."] }),
   ],
-  swat: side({ eye: "s", paw: true, legs: ["...#.#......#......", "...#.#......#......"] }),
+  swat: side({ shut: true, paw: true, legs: ["...#.#......#......", "...#.#......#......"] }),
 };
 
 const YARN = [
@@ -176,7 +178,7 @@ export function startYard({ startPaused = false } = {}) {
   let width = yard.clientWidth, height = yard.clientHeight;
 
   const cat = { x: 64, y: 0, vy: 0, face: 1, state: "sleep", since: 0, stride: 0, strokes: 0, sulkUntil: -9, keyPet: -9, goal: 0 };
-  const ball = { x: 150, y: 0, vx: 0, vy: 0, angle: 0, held: false };
+  const ball = { x: Math.max(150, width - 46), y: 0, vx: 0, vy: 0, angle: 0, held: false }; // the yarn waits at the far side
   const pointer = { x: 0, y: 0, inside: false, down: false, lastMove: -9, lastStroke: -9, travel: 0 };
   let clock = 0; // seconds the yard has been running
   let interest = 0; // 1 after you throw or drop the yarn; every swat spends some

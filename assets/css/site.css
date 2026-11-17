@@ -452,11 +452,20 @@ h1 {
 
 .projects {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* with an odd number of cards the first takes a whole row, so none is left on its own */
+.projects > li:first-child:nth-last-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.projects > li:first-child:nth-last-child(odd) .shot {
+  aspect-ratio: 5 / 2;
 }
 
 .project {
@@ -476,81 +485,61 @@ h1 {
   background: rgb(255 255 255 / 0.03);
 }
 
-/* the frame a figure plays in */
+/* the frame a drawing plays in */
 .shot {
-  display: grid;
-  place-items: center;
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: rgb(255 255 255 / 0.02);
-  container-type: inline-size;
+  background: #161617;
 }
 
-/* figures.js fills this with one span per character; the type shrinks to fit a narrow frame */
 .figure {
-  color: var(--text);
-  font: 10px/1.2 var(--mono);
-  font-size: clamp(7px, calc(100cqw / 30 / 0.62), 12px);
-  user-select: none;
+  width: 100%;
+  height: 100%;
 }
 
-.figure div {
+/* figures.js draws the machine as paths: thin lines, dark faces, a few parts lit */
+.iso {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.iso path {
+  fill: none;
+  stroke: #77777f;
+  stroke-width: 1px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke; /* the lines stay hairlines at any size */
+}
+
+.iso .top { fill: #242427; }
+.iso .left { fill: #1c1c1f; }
+.iso .right { fill: #151517; }
+.iso .fill { stroke: none; }
+.iso .mark { stroke: #46464c; }
+.iso .ring { stroke: #5a5a62; }
+
+.iso .lit { stroke: color-mix(in srgb, var(--accent) 80%, white); }
+.iso .top.lit { fill: color-mix(in srgb, var(--accent) 48%, #151517); }
+.iso .left.lit { fill: color-mix(in srgb, var(--accent) 34%, #151517); }
+.iso .right.lit { fill: color-mix(in srgb, var(--accent) 24%, #151517); }
+.iso .ring.lit { stroke: var(--accent); stroke-width: 1.6px; }
+
+.project-head {
   display: flex;
-  height: 1.2em;
-}
-
-.figure span {
-  flex: none;
-  width: 1ch;
-  overflow: hidden;
-  text-align: center;
-  white-space: pre;
-}
-
-.figure .ln { color: #62626e; } /* line work */
-.figure .fa { color: #3a3a42; } /* faint */
-.figure .hi { color: var(--strong); }
-.figure .ac,
-.figure .c1 { color: var(--accent); }
-.figure .c2 { color: #8cc8f5; }
-.figure .c3 { color: #f0b97a; }
-.figure .c4 { color: #f08fc0; }
-
-.project-top {
-  display: flex;
+  align-items: baseline;
   justify-content: space-between;
-  margin: 12px 8px 0;
-  color: var(--mute);
-  font: 11px/1 var(--mono);
-  letter-spacing: 0.08em;
-}
-
-.live {
-  color: var(--accent);
-}
-
-.live::before {
-  content: "";
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin-right: 6px;
-  background: currentColor;
-  vertical-align: 1px;
-  animation: live 2.6s ease-in-out infinite;
-}
-
-@keyframes live {
-  50% {
-    opacity: 0.25;
-  }
+  gap: 10px;
+  margin: 11px 8px 5px;
 }
 
 .project h3 {
-  margin: 9px 8px 4px;
+  min-width: 0;
+  margin: 0;
   color: var(--strong);
-  font: 500 15px/1.3 var(--sans);
+  font: 600 14px/1.35 var(--mono);
 }
 
 .project h3 a {
@@ -573,19 +562,34 @@ h1 {
   outline-offset: 3px;
 }
 
-.arrow {
-  display: inline-block;
-  margin-left: 4px;
+/* a dot and a word: filled and blinking for something live, hollow otherwise */
+.status {
+  flex: none;
   color: var(--mute);
-  font-family: var(--mono);
-  font-size: 12px;
-  transition: transform 0.15s ease, color 0.15s ease;
+  font: 12px/1.35 var(--mono);
 }
 
-.project:hover .arrow,
-.project:focus-within .arrow {
-  color: var(--accent);
-  transform: translate(2px, -2px);
+.status::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 6px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  vertical-align: 1px;
+}
+
+.status.live::before {
+  border-color: var(--accent);
+  background: var(--accent);
+  animation: live 2.6s ease-in-out infinite;
+}
+
+@keyframes live {
+  50% {
+    opacity: 0.25;
+  }
 }
 
 .project p {
@@ -727,7 +731,7 @@ h1 {
 
 .yard {
   position: relative;
-  height: 112px;
+  height: 120px;
   overflow: hidden;
   border-top: 1px dashed var(--line);
   cursor: pointer;
@@ -752,7 +756,19 @@ html:not(.js) .pets {
   letter-spacing: 0.06em;
   text-align: center;
   pointer-events: none;
-  transition: opacity 0.5s ease;
+  opacity: 0; /* the strip stays quiet until the pointer comes to it */
+  transition: opacity 0.4s ease;
+}
+
+.yard:hover .yard-hint,
+.yard:focus-within .yard-hint {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .yard-hint {
+    opacity: 1; /* no pointer to hover with: say it up front */
+  }
 }
 
 .yard.played .yard-hint {
@@ -807,7 +823,7 @@ html:not(.js) .pets {
 
 .thread polyline {
   fill: none;
-  stroke: #f2766b;
+  stroke: #f4a0ae;
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -840,7 +856,7 @@ html:not(.js) .pets {
 }
 
 .pets span:first-child {
-  color: #f08fc0;
+  color: #f4a0ae;
 }
 
 /* for screen readers only */
@@ -907,6 +923,10 @@ html:not(.js) .pets {
     grid-template-columns: 1fr;
   }
 
+  .projects > li:first-child:nth-last-child(odd) .shot {
+    aspect-ratio: 4 / 3;
+  }
+
   .avatar {
     width: 60px;
     height: 60px;
@@ -936,7 +956,7 @@ html:not(.js) .pets {
   }
 
   .cursor,
-  .live::before {
+  .status.live::before {
     animation: none;
   }
 
@@ -950,7 +970,6 @@ html:not(.js) .pets {
   }
 
   .scene-layer,
-  .arrow,
   :root {
     transition: none;
   }
